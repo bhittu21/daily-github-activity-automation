@@ -1,4 +1,4 @@
-name: daily-commit
+name: Daily GitHub Activity
 
 on:
   schedule:
@@ -9,20 +9,32 @@ permissions:
   contents: write
 
 jobs:
-  commit:
+  daily-commit:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Update activity file
+      - name: Generate daily activity
         run: |
-          echo "Activity on $(date -u)" >> activity.log
+          DATE=$(date -u +"%Y-%m-%d")
+          TIME=$(date -u +"%H:%M:%S UTC")
 
-      - name: Commit and push
+          echo "$DATE $TIME" >> activity.log
+
+          COUNT=$(wc -l < activity.log)
+          echo "# Automation Stats" > stats.md
+          echo "" >> stats.md
+          echo "Total automated runs: $COUNT" >> stats.md
+          echo "" >> stats.md
+          echo "Last run: $DATE $TIME" >> stats.md
+
+      - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add activity.log
-          git commit -m "daily activity update" || exit 0
+
+          git add activity.log stats.md
+          git commit -m "automated daily activity" || exit 0
           git push
